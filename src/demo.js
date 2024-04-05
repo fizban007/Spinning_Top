@@ -77,7 +77,7 @@ var set_rotation;
 // Load a glTF resource
 loader.load(
   // resource URL
-  '../model/scene.gltf',
+  'model/scene.gltf',
   // called when the resource is loaded
   function ( gltf ) {
     console.log(gltf.scene);
