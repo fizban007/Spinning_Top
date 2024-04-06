@@ -36,6 +36,7 @@ var Config = function () {
   this.psi = 0.0;
   this.dt = 0.01;
   this.run = false;
+  this.running = false;
 }
 var conf = new Config();
 
@@ -143,9 +144,8 @@ gui.add(conf, 'L3', 0.0, 100.0).name('L3');
 gui.add(conf, 'MgR', 0.0, 100.0).name('MgR');
 gui.add(conf, 'lambda_1', 0.0, 100.0).name('lambda_1');
 gui.add(conf, 'lambda_3', 0.0, 100.0).name('lambda_3');
-gui.add(conf, 'theta', 0.0, Math.PI).name('theta').listen();
+gui.add(conf, 'theta', 0.01, Math.PI).name('theta').listen();
 gui.add(conf, 'dt', 0.001, 0.1).name('dt').listen();
-gui.add(conf, 'run').name('Run').listen().onChange(start_stop_integration);
 
 var phi = 0.0;
 var psi = 0.0;
@@ -177,13 +177,19 @@ var rk4 = new RungeKutta4(derives, 0.0, [conf.theta, conf.thetadot, conf.phi, co
 var start_stop_integration = function() {
   if (conf.run) {
     rk4 = new RungeKutta4(derives, 0.0, [conf.theta, conf.thetadot, conf.phi, conf.psi], dt)
+    conf.running = true;
+    console.log(conf);
+  } else {
+    conf.running = false;
   }
 }
+
+gui.add(conf, 'run').name('Run').listen().onChange(start_stop_integration);
 
 function animate() {
   requestAnimationFrame(animate, canvas);
 
-  if (conf.run) {
+  if (conf.running) {
     var y = rk4.steps(Math.floor(conf.dt/dt));
     conf.theta = y[0];
     conf.phi = y[2];
