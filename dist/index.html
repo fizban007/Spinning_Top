@@ -30,7 +30,7 @@
 
     <button id="infoToggle" onclick="var d=document.getElementById('description');d.style.display=d.style.display==='none'?'block':'none';">&#9432; Info</button>
 
-    <div id="description" style="display:none;">
+    <div id="description">
       <h3>Symmetric Top (Rigid Body)</h3>
 
       <p>
@@ -43,19 +43,20 @@
 
       <h3>Euler Angles</h3>
       <p>
-        The orientation is described by three <strong>Euler angles</strong>
-        (ZYZ convention):
+        The orientation of the body is described by three
+        <strong>Euler angles</strong> (ZYZ convention). These are purely
+        geometric &mdash; they specify how the body frame is rotated
+        relative to the space frame, regardless of the dynamics:
       </p>
       <ul>
         <li><span style="color:#4488ff;font-weight:bold;">\(\phi\)</span> &mdash;
-          <strong>Precession</strong>: rotation about the fixed \(z\)-axis.
-          This is the slow "wobble" of the symmetry axis around vertical.</li>
+          rotation about the space-fixed \(z\)-axis. It specifies the
+          azimuthal direction in which the symmetry axis points.</li>
         <li><span style="color:#44ff88;font-weight:bold;">\(\theta\)</span> &mdash;
-          <strong>Nutation</strong>: the tilt angle between the symmetry axis
-          and the vertical \(z\)-axis. \(\theta = 0\) means upright.</li>
+          the tilt angle between the body symmetry axis and the vertical
+          \(z\)-axis. \(\theta = 0\) means the body axis is upright.</li>
         <li><span style="color:#ff6644;font-weight:bold;">\(\psi\)</span> &mdash;
-          <strong>Spin</strong>: rotation of the body about its own symmetry
-          axis. This is the fast spinning of the wheel.</li>
+          rotation of the body about its own symmetry axis.</li>
       </ul>
       <p>Toggle <em>Show Euler angles</em> in the control panel to see the
         arcs for each angle overlaid on the scene.</p>
@@ -88,18 +89,36 @@
         the distance from the pivot to the center of mass.
       </p>
 
-      <h3>Steady Precession</h3>
+      <h3>Precession and Nutation</h3>
       <p>
-        If the initial conditions satisfy \(\dot\theta = 0\) and
-        \(\ddot\theta = 0\), the top precesses at a constant angle &mdash;
-        no nutation. The <em>Set steady precession</em> button computes
-        the \(\dot\phi\) that achieves this for the current \(\theta\) and
-        \(\dot\psi\). The condition is:
+        The dynamics of the symmetric top give rise to two characteristic
+        motions:
+      </p>
+      <ul>
+        <li><strong>Precession</strong> &mdash; the symmetry axis sweeps
+          around the vertical. This appears as a steady change in \(\phi\),
+          driven by the gravitational torque.</li>
+        <li><strong>Nutation</strong> &mdash; the tilt angle \(\theta\)
+          oscillates up and down as the top precesses. The range of this
+          oscillation depends on the initial conditions.</li>
+      </ul>
+      <p>
+        In general, both motions happen simultaneously. However, for
+        special initial conditions, the top can undergo
+        <strong>steady precession</strong> &mdash; \(\theta\) remains
+        exactly constant while \(\phi\) increases at a uniform rate.
+        This requires \(\dot\theta = 0\) and \(\ddot\theta = 0\),
+        which gives the condition:
       </p>
       \[
         \lambda_1\cos\theta\;\dot\phi^2
         - L_3\,\dot\phi + MgR = 0
       \]
+      <p>
+        The <em>Set steady precession</em> button computes the
+        \(\dot\phi\) that satisfies this for the current \(\theta\) and
+        \(\dot\psi\).
+      </p>
 
       <h3>Controls</h3>
       <p>

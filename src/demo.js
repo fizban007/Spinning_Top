@@ -297,12 +297,13 @@ animate();
 
 const gui = new GUI();
 gui.add(conf, 'MgR', 0.0, 100.0).name('MgR');
-gui.add(conf, 'lambda_1', 0.0, 100.0).name('lambda_1');
-gui.add(conf, 'lambda_3', 0.0, 100.0).name('lambda_3');
-gui.add(conf, 'theta', 0.01, Math.PI).name('theta').listen();
-gui.add(conf, 'phi_dot', -10.0, 10.0).name('phi_dot').listen();
-gui.add(conf, 'theta_dot', -10.0, 10.0).name('theta_dot').listen();
-gui.add(conf, 'psi_dot', 0.0, 50.0).name('psi_dot').listen();
+gui.add(conf, 'lambda_1', 0.0, 100.0).name('\u03bb\u2081');
+gui.add(conf, 'lambda_3', 0.0, 100.0).name('\u03bb\u2083');
+gui.add(conf, 'theta', 0.01, Math.PI).name('\u03b8').listen();
+gui.add(conf, 'phi', 0.0, 2 * Math.PI).name('\u03d5').listen();
+gui.add(conf, 'phi_dot', -10.0, 10.0).name('\u03d5_dot').listen();
+gui.add(conf, 'theta_dot', -10.0, 10.0).name('\u03b8_dot').listen();
+gui.add(conf, 'psi_dot', 0.0, 50.0).name('\u03c8_dot').listen();
 gui.add(conf, 'dt', 0.001, 0.1).name('dt').listen();
 gui.add({ setSteady: function() {
   var pd = steadyPhiDot(conf.theta, conf.psi_dot, conf.MgR, conf.lambda_1, conf.lambda_3);
@@ -390,7 +391,7 @@ function animate() {
     var y = rk4.steps(Math.floor(conf.dt/dt));
     conf.theta = y[0];
     conf.theta_dot = y[1];
-    conf.phi = y[2];
+    conf.phi = ((y[2] % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     conf.psi = y[3];
     // Recover angular velocities from conserved quantities
     var sth = Math.sin(conf.theta);
