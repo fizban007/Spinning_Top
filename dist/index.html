@@ -27,5 +27,86 @@
   <body>
     <script type="module" src="demo.js"></script>
     <canvas id="vis" class="vis"></canvas>
+
+    <button id="infoToggle" onclick="var d=document.getElementById('description');d.style.display=d.style.display==='none'?'block':'none';">&#9432; Info</button>
+
+    <div id="description" style="display:none;">
+      <h3>Symmetric Top (Rigid Body)</h3>
+
+      <p>
+        This demo simulates a <strong>symmetric top</strong> &mdash; a rigid body
+        with two equal principal moments of inertia
+        \(\lambda_1 = \lambda_2\) and a distinct third moment \(\lambda_3\)
+        about its symmetry axis. The body is free to rotate about a fixed
+        pivot at the origin under the influence of gravity.
+      </p>
+
+      <h3>Euler Angles</h3>
+      <p>
+        The orientation is described by three <strong>Euler angles</strong>
+        (ZYZ convention):
+      </p>
+      <ul>
+        <li><span style="color:#4488ff;font-weight:bold;">\(\phi\)</span> &mdash;
+          <strong>Precession</strong>: rotation about the fixed \(z\)-axis.
+          This is the slow "wobble" of the symmetry axis around vertical.</li>
+        <li><span style="color:#44ff88;font-weight:bold;">\(\theta\)</span> &mdash;
+          <strong>Nutation</strong>: the tilt angle between the symmetry axis
+          and the vertical \(z\)-axis. \(\theta = 0\) means upright.</li>
+        <li><span style="color:#ff6644;font-weight:bold;">\(\psi\)</span> &mdash;
+          <strong>Spin</strong>: rotation of the body about its own symmetry
+          axis. This is the fast spinning of the wheel.</li>
+      </ul>
+      <p>Toggle <em>Show Euler angles</em> in the control panel to see the
+        arcs for each angle overlaid on the scene.</p>
+
+      <h3>Equations of Motion</h3>
+      <p>
+        Because \(\phi\) and \(\psi\) are cyclic coordinates (the Lagrangian
+        doesn't depend on them directly), their conjugate momenta are conserved:
+      </p>
+      \[
+        L_z = \lambda_1\,\dot\phi\,\sin^2\!\theta
+              + \lambda_3\bigl(\dot\psi + \dot\phi\cos\theta\bigr)\cos\theta
+      \]
+      \[
+        L_3 = \lambda_3\bigl(\dot\psi + \dot\phi\cos\theta\bigr)
+      \]
+      <p>
+        \(L_z\) is the component of angular momentum along the space-fixed
+        \(z\)-axis, and \(L_3\) is the component along the body symmetry axis.
+        The remaining equation for \(\theta\) is:
+      </p>
+      \[
+        \lambda_1\,\ddot\theta
+        = \lambda_1\,\dot\phi^2\sin\theta\cos\theta
+          - L_3\,\dot\phi\,\sin\theta
+          + Mg R\,\sin\theta
+      \]
+      <p>
+        where \(MgR\) combines the mass, gravitational acceleration, and
+        the distance from the pivot to the center of mass.
+      </p>
+
+      <h3>Steady Precession</h3>
+      <p>
+        If the initial conditions satisfy \(\dot\theta = 0\) and
+        \(\ddot\theta = 0\), the top precesses at a constant angle &mdash;
+        no nutation. The <em>Set steady precession</em> button computes
+        the \(\dot\phi\) that achieves this for the current \(\theta\) and
+        \(\dot\psi\). The condition is:
+      </p>
+      \[
+        \lambda_1\cos\theta\;\dot\phi^2
+        - L_3\,\dot\phi + MgR = 0
+      \]
+
+      <h3>Controls</h3>
+      <p>
+        Adjust the physical parameters and initial angular velocities in the
+        right-hand panel, then press <strong>Run</strong> to start the
+        simulation. Drag to orbit the camera, scroll to zoom.
+      </p>
+    </div>
   </body>
 </html>

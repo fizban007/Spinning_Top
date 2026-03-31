@@ -53,7 +53,7 @@ var Config = function () {
   // Conserved quantities (computed when Run is pressed)
   this.Lz = 0.0;
   this.L3 = 0.0;
-  this.showAngles = false;
+  this.showAngles = true;
   this.run = false;
   this.running = false;
 }
@@ -65,8 +65,9 @@ scene.background = new THREE.Color(0x000000);
 // THREE.Object3D.DefaultUp.set(0.5,0.0,0.8);
 var camera = new THREE.PerspectiveCamera(30, width / height, 1, 1000);
 var camera_d = 12;
-camera.position.z = camera_d * Math.cos(80 * Math.PI / 180);
-camera.position.x = camera_d * Math.sin(80 * Math.PI / 180);
+camera.position.z = camera_d * Math.cos(50 * Math.PI / 180);
+camera.position.x = camera_d * Math.sin(50 * Math.PI / 180) * Math.cos(45 * Math.PI / 180);
+camera.position.y = camera_d * Math.sin(50 * Math.PI / 180) * Math.sin(45 * Math.PI / 180);
 camera.up.set(0, 0, 1);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
@@ -312,6 +313,28 @@ gui.add(conf, 'L3').name('L3 (conserved)').listen().domElement.style.pointerEven
 gui.add(conf, 'showAngles').name('Show Euler angles').onChange(function(v) {
   angleVisGroup.visible = v;
 });
+gui.add({ reset: function() {
+  conf.running = false;
+  conf.run = false;
+  var defaults = new Config();
+  conf.MgR = defaults.MgR;
+  conf.lambda_1 = defaults.lambda_1;
+  conf.lambda_3 = defaults.lambda_3;
+  conf.theta = defaults.theta;
+  conf.theta_dot = defaults.theta_dot;
+  conf.psi_dot = defaults.psi_dot;
+  conf.phi_dot = defaults.phi_dot;
+  conf.phi = defaults.phi;
+  conf.psi = defaults.psi;
+  conf.dt = defaults.dt;
+  conf.Lz = 0.0;
+  conf.L3 = 0.0;
+  rk4 = null;
+  // Reset GUI sliders to match
+  for (var i in gui.__controllers) {
+    gui.__controllers[i].updateDisplay();
+  }
+}}, 'reset').name('Reset');
 
 var dt = 0.001;
 
