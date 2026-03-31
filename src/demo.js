@@ -38,11 +38,17 @@ function steadyPhiDot(theta, psi_dot, MgR, l1, l3) {
   return (-b - Math.sqrt(disc)) / (2 * a);
 }
 
+// Visual scaling: rimRadius = spokeScale * lambda_3, axleLength = axleScale * MgR
+var spokeScale = 0.4;
+var axleScale = 0.2;
+var inertiaRatio = (axleScale / spokeScale) ** 2;
+
 /// Config contains the physical and visualization parameters
 var Config = function () {
   this.MgR = 10.0;
-  this.lambda_1 = 10.0;
   this.lambda_3 = 2.0;
+  // lambda_1 derived from ring-on-a-rod model: lambda_1 = lambda_3/2 + (L/R)^2 * lambda_3
+  this.lambda_1 = this.lambda_3 / 2 + inertiaRatio * this.MgR * this.MgR / this.lambda_3;
   this.theta = 0.4;
   this.theta_dot = 0.0;
   this.psi_dot = 15.0;
@@ -88,55 +94,70 @@ scene.add(light);
 var pivot;
 var set_rotation;
 
-// Dimensions
-var axleLength = 2.0;
+// Fixed dimensions
 var axleRadius = 0.03;
-var rimRadius = 0.8;
 var rimTube = 0.04;
 var spokeRadius = 0.025;
 var numSpokes = 4;
 
+// Dynamic dimensions (computed from physics parameters)
+var axleLength = axleScale * conf.MgR;
+var rimRadius = spokeScale * conf.lambda_3;
+
 var wheelGroup = new THREE.Group();
 
-// Axle: cylinder along local Z from 0 to axleLength
-var axleGeo = new THREE.CylinderGeometry(axleRadius, axleRadius, axleLength, 16);
+// Shared materials
 var axleMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6, roughness: 0.3 });
-var axleMesh = new THREE.Mesh(axleGeo, axleMat);
-// CylinderGeometry is along Y by default; rotate to align with Z
-axleMesh.rotation.x = Math.PI / 2;
-axleMesh.position.z = axleLength / 2;
-wheelGroup.add(axleMesh);
-
-// Rim (torus) at the end of the axle
-var rimGeo = new THREE.TorusGeometry(rimRadius, rimTube, 16, 64);
 var rimMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.5, roughness: 0.3 });
-var rimMesh = new THREE.Mesh(rimGeo, rimMat);
-rimMesh.position.z = axleLength;
-wheelGroup.add(rimMesh);
-
-// Spokes: radial cylinders in the wheel plane
 var spokeMat = new THREE.MeshStandardMaterial({ color: 0xdd4444, metalness: 0.4, roughness: 0.4 });
-for (var i = 0; i < numSpokes; i++) {
-  var angle = (i / numSpokes) * Math.PI * 2;
-  var spokeGeo = new THREE.CylinderGeometry(spokeRadius, spokeRadius, rimRadius, 8);
-  var spoke = new THREE.Mesh(spokeGeo, spokeMat);
-  // Position at midpoint of the spoke, at the wheel plane
-  spoke.position.set(
-    Math.cos(angle) * rimRadius / 2,
-    Math.sin(angle) * rimRadius / 2,
-    axleLength
-  );
-  // Rotate so the cylinder axis points radially outward
-  spoke.rotation.z = angle - Math.PI / 2;
-  wheelGroup.add(spoke);
+var hubMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6, roughness: 0.3 });
+
+function buildWheel() {
+  rimRadius = Math.max(0.05, spokeScale * conf.lambda_3);
+  axleLength = Math.max(0.1, axleScale * conf.MgR);
+  conf.lambda_1 = conf.lambda_3 / 2 + inertiaRatio * conf.MgR * conf.MgR / conf.lambda_3;
+
+  while (wheelGroup.children.length > 0) {
+    var child = wheelGroup.children[0];
+    if (child.geometry) child.geometry.dispose();
+    wheelGroup.remove(child);
+  }
+
+  // Axle: cylinder along local Z from 0 to axleLength
+  var axleGeo = new THREE.CylinderGeometry(axleRadius, axleRadius, axleLength, 16);
+  var axleMesh = new THREE.Mesh(axleGeo, axleMat);
+  axleMesh.rotation.x = Math.PI / 2;
+  axleMesh.position.z = axleLength / 2;
+  wheelGroup.add(axleMesh);
+
+  // Rim (torus) at the end of the axle
+  var rimGeo = new THREE.TorusGeometry(rimRadius, rimTube, 16, 64);
+  var rimMesh = new THREE.Mesh(rimGeo, rimMat);
+  rimMesh.position.z = axleLength;
+  wheelGroup.add(rimMesh);
+
+  // Spokes: radial cylinders in the wheel plane
+  for (var i = 0; i < numSpokes; i++) {
+    var angle = (i / numSpokes) * Math.PI * 2;
+    var spokeGeo = new THREE.CylinderGeometry(spokeRadius, spokeRadius, rimRadius, 8);
+    var spoke = new THREE.Mesh(spokeGeo, spokeMat);
+    spoke.position.set(
+      Math.cos(angle) * rimRadius / 2,
+      Math.sin(angle) * rimRadius / 2,
+      axleLength
+    );
+    spoke.rotation.z = angle - Math.PI / 2;
+    wheelGroup.add(spoke);
+  }
+
+  // Small hub at the wheel center
+  var hubGeo = new THREE.SphereGeometry(0.06, 16, 16);
+  var hubMesh = new THREE.Mesh(hubGeo, hubMat);
+  hubMesh.position.z = axleLength;
+  wheelGroup.add(hubMesh);
 }
 
-// Small hub at the wheel center
-var hubGeo = new THREE.SphereGeometry(0.06, 16, 16);
-var hubMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6, roughness: 0.3 });
-var hubMesh = new THREE.Mesh(hubGeo, hubMat);
-hubMesh.position.z = axleLength;
-wheelGroup.add(hubMesh);
+buildWheel();
 
 // Pivot group at origin for Euler angle rotation
 pivot = new THREE.Group();
@@ -295,16 +316,46 @@ function updateAngleVis() {
 
 animate();
 
+// Add a text input alongside a dat.gui slider controller
+function addInputToSlider(controller) {
+  var input = document.createElement('input');
+  input.type = 'text';
+  input.style.cssText = 'width:50px; float:left; border:0; outline:none; background:#1a1a1a; color:#eee; font:11px monospace; text-align:right; padding:1px 3px; height:19px; margin-top:4px; margin-right:6px; box-sizing:border-box;';
+  var slider = controller.domElement.querySelector('.slider');
+  if (!slider) return controller;
+  // Hide the default dat.gui NumberControllerBox input
+  var existingInput = controller.domElement.querySelector('input');
+  if (existingInput) existingInput.style.display = 'none';
+  slider.style.width = 'calc(100% - 56px)';
+  controller.domElement.insertBefore(input, slider);
+  var origUpdate = controller.updateDisplay.bind(controller);
+  controller.updateDisplay = function() {
+    if (document.activeElement !== input) {
+      input.value = controller.getValue().toFixed(3);
+    }
+    return origUpdate();
+  };
+  controller.updateDisplay();
+  input.addEventListener('change', function() {
+    var val = parseFloat(input.value);
+    if (!isNaN(val)) controller.setValue(val);
+  });
+  input.addEventListener('keydown', function(e) {
+    if (e.keyCode === 13) input.blur();
+  });
+  return controller;
+}
+
 const gui = new GUI();
-gui.add(conf, 'MgR', 0.0, 100.0).name('MgR');
-gui.add(conf, 'lambda_1', 0.0, 100.0).name('\u03bb\u2081');
-gui.add(conf, 'lambda_3', 0.0, 100.0).name('\u03bb\u2083');
-gui.add(conf, 'theta', 0.01, Math.PI).name('\u03b8').listen();
-gui.add(conf, 'phi', 0.0, 2 * Math.PI).name('\u03d5').listen();
-gui.add(conf, 'phi_dot', -10.0, 10.0).name('\u03d5_dot').listen();
-gui.add(conf, 'theta_dot', -10.0, 10.0).name('\u03b8_dot').listen();
-gui.add(conf, 'psi_dot', 0.0, 50.0).name('\u03c8_dot').listen();
-gui.add(conf, 'dt', 0.001, 0.1).name('dt').listen();
+addInputToSlider(gui.add(conf, 'MgR', 0.5, 30.0).step(0.001).name('MgR').onChange(function() { buildWheel(); }));
+addInputToSlider(gui.add(conf, 'lambda_3', 0.5, 10.0).step(0.001).name('\u03bb\u2083 (spoke)').onChange(function() { buildWheel(); }));
+gui.add(conf, 'lambda_1').name('\u03bb\u2081 (derived)').listen().domElement.style.pointerEvents = 'none';
+addInputToSlider(gui.add(conf, 'theta', 0.01, Math.PI).step(0.001).name('\u03b8').listen());
+addInputToSlider(gui.add(conf, 'phi', 0.0, 2 * Math.PI).step(0.001).name('\u03d5').listen());
+addInputToSlider(gui.add(conf, 'phi_dot', -10.0, 10.0).step(0.001).name('\u03d5_dot').listen());
+addInputToSlider(gui.add(conf, 'theta_dot', -10.0, 10.0).step(0.001).name('\u03b8_dot').listen());
+addInputToSlider(gui.add(conf, 'psi_dot', 0.0, 50.0).step(0.001).name('\u03c8_dot').listen());
+addInputToSlider(gui.add(conf, 'dt', 0.001, 0.1).step(0.001).name('dt').listen());
 gui.add({ setSteady: function() {
   var pd = steadyPhiDot(conf.theta, conf.psi_dot, conf.MgR, conf.lambda_1, conf.lambda_3);
   if (pd !== null) conf.phi_dot = pd;
@@ -319,7 +370,6 @@ gui.add({ reset: function() {
   conf.run = false;
   var defaults = new Config();
   conf.MgR = defaults.MgR;
-  conf.lambda_1 = defaults.lambda_1;
   conf.lambda_3 = defaults.lambda_3;
   conf.theta = defaults.theta;
   conf.theta_dot = defaults.theta_dot;
@@ -331,6 +381,7 @@ gui.add({ reset: function() {
   conf.Lz = 0.0;
   conf.L3 = 0.0;
   rk4 = null;
+  buildWheel();
   // Reset GUI sliders to match
   for (var i in gui.__controllers) {
     gui.__controllers[i].updateDisplay();
