@@ -352,6 +352,7 @@ addInputToSlider(gui.add(conf, 'lambda_3', 0.5, 10.0).step(0.001).name('\u03bb\u
 gui.add(conf, 'lambda_1').name('\u03bb\u2081 (derived)').listen().domElement.style.pointerEvents = 'none';
 addInputToSlider(gui.add(conf, 'theta', 0.01, Math.PI).step(0.001).name('\u03b8').listen());
 addInputToSlider(gui.add(conf, 'phi', 0.0, 2 * Math.PI).step(0.001).name('\u03d5').listen());
+addInputToSlider(gui.add(conf, 'psi', 0.0, 2 * Math.PI).step(0.001).name('\u03c8').listen());
 addInputToSlider(gui.add(conf, 'phi_dot', -10.0, 10.0).step(0.001).name('\u03d5_dot').listen());
 addInputToSlider(gui.add(conf, 'theta_dot', -10.0, 10.0).step(0.001).name('\u03b8_dot').listen());
 addInputToSlider(gui.add(conf, 'psi_dot', 0.0, 50.0).step(0.001).name('\u03c8_dot').listen());
@@ -443,7 +444,7 @@ function animate() {
     conf.theta = y[0];
     conf.theta_dot = y[1];
     conf.phi = ((y[2] % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-    conf.psi = y[3];
+    conf.psi = ((y[3] % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     // Recover angular velocities from conserved quantities
     var sth = Math.sin(conf.theta);
     var cth = Math.cos(conf.theta);
